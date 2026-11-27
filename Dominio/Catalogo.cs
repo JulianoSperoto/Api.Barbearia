@@ -8,9 +8,13 @@ public sealed class Endereco
 
     public Endereco(string rua, string numero, string cidade)
     {
-        Rua = rua;
-        Numero = numero;
-        Cidade = cidade;
+        ArgumentException.ThrowIfNullOrWhiteSpace(rua);
+        ArgumentException.ThrowIfNullOrWhiteSpace(numero);
+        ArgumentException.ThrowIfNullOrWhiteSpace(cidade);
+
+        Rua = rua.Trim();
+        Numero = numero.Trim();
+        Cidade = cidade.Trim();
     }
 }
 
@@ -23,9 +27,13 @@ public sealed class Barbearia
 
     public Barbearia(int id, string nome, string telefone, Endereco endereco)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nome);
+        ArgumentException.ThrowIfNullOrWhiteSpace(telefone);
+        ArgumentNullException.ThrowIfNull(endereco);
+
         Id = id;
-        Nome = nome;
-        Telefone = telefone;
+        Nome = nome.Trim();
+        Telefone = telefone.Trim();
         Endereco = endereco;
     }
 }
@@ -39,10 +47,13 @@ public sealed class Barbeiro
 
     public Barbeiro(int id, string nome, string telefone, string especialidades)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nome);
+        ArgumentException.ThrowIfNullOrWhiteSpace(telefone);
+
         Id = id;
-        Nome = nome;
-        Telefone = telefone;
-        Especialidades = especialidades;
+        Nome = nome.Trim();
+        Telefone = telefone.Trim();
+        Especialidades = especialidades?.Trim() ?? string.Empty;
     }
 }
 
@@ -54,9 +65,12 @@ public sealed class Cliente
 
     public Cliente(int id, string nome, string telefone)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nome);
+        ArgumentException.ThrowIfNullOrWhiteSpace(telefone);
+
         Id = id;
-        Nome = nome;
-        Telefone = telefone;
+        Nome = nome.Trim();
+        Telefone = telefone.Trim();
     }
 }
 
@@ -70,9 +84,15 @@ public sealed class Servico
 
     public Servico(int id, int barbeariaId, string nome, int duracaoMinutos, decimal precoTabela)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nome);
+        if (duracaoMinutos <= 0)
+            throw new ArgumentOutOfRangeException(nameof(duracaoMinutos), "A duração deve ser maior que zero.");
+        if (precoTabela < 0)
+            throw new ArgumentOutOfRangeException(nameof(precoTabela), "O preço não pode ser negativo.");
+
         Id = id;
         BarbeariaId = barbeariaId;
-        Nome = nome;
+        Nome = nome.Trim();
         DuracaoMinutos = duracaoMinutos;
         PrecoTabela = precoTabela;
     }
