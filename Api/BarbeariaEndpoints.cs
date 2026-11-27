@@ -29,12 +29,12 @@ public static class BarbeariaEndpoints
         app.MapGet("/barbearias/{id:int}/barbeiros", (int id, ICatalogoRepositorio catalogo) =>
             catalogo.ListarBarbearias().Any(barbearia => barbearia.Id == id)
                 ? Results.Ok(catalogo.ListarBarbeiros(id))
-                : Results.NotFound());
+                : Results.NotFound(new { mensagem = "Barbearia não encontrada." }));
 
         app.MapGet("/barbearias/{id:int}/servicos", (int id, ICatalogoRepositorio catalogo) =>
             catalogo.ListarBarbearias().Any(barbearia => barbearia.Id == id)
                 ? Results.Ok(catalogo.ListarServicos(id))
-                : Results.NotFound());
+                : Results.NotFound(new { mensagem = "Barbearia não encontrada." }));
 
         app.MapGet("/clientes", (ICatalogoRepositorio catalogo) => Results.Ok(catalogo.ListarClientes()));
 
@@ -65,7 +65,9 @@ public static class BarbeariaEndpoints
         agenda.MapGet("/{id:int}/avaliacao", (int id, AgendamentoServico servico) => Executar(() =>
         {
             var avaliacao = servico.Buscar(id).Avaliacao;
-            return avaliacao == null ? Results.NotFound() : Results.Ok(avaliacao);
+            return avaliacao == null
+                ? Results.NotFound(new { mensagem = "Este agendamento ainda não possui avaliação." })
+                : Results.Ok(avaliacao);
         }));
     }
 
