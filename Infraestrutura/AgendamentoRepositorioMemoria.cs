@@ -25,11 +25,8 @@ public sealed class AgendamentoRepositorioMemoria : IAgendamentoRepositorio
     {
         lock (acesso)
         {
-            foreach (var reservaExistente in agendamentos.Values)
-            {
-                if (agendamento.ConflitaCom(reservaExistente))
-                    throw new ConflitoAgendamentoException("O barbeiro já tem uma reserva nesse intervalo.");
-            }
+            if (agendamentos.Values.Any(agendamento.ConflitaCom))
+                throw new ConflitoAgendamentoException("O barbeiro já tem uma reserva nesse intervalo.");
 
             var reserva = agendamento.Identificar(proximoId++);
             agendamentos.Add(reserva.Id, reserva);
