@@ -17,12 +17,19 @@ public sealed class ItemAgendamento
 
     public ItemAgendamento(int servicoId, string nome, int duracaoMinutos, decimal precoCobrado)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nome);
+        if (duracaoMinutos <= 0)
+            throw new ArgumentOutOfRangeException(nameof(duracaoMinutos), "A duração deve ser maior que zero.");
+        if (precoCobrado < 0)
+            throw new ArgumentOutOfRangeException(nameof(precoCobrado), "O preço cobrado não pode ser negativo.");
+
         ServicoId = servicoId;
-        Nome = nome;
+        Nome = nome.Trim();
         DuracaoMinutos = duracaoMinutos;
         PrecoCobrado = precoCobrado;
     }
 }
+
 public sealed class Avaliacao
 {
     public int Nota { get; }
@@ -30,8 +37,11 @@ public sealed class Avaliacao
 
     public Avaliacao(int nota, string? comentario)
     {
+        if (nota is < 1 or > 5)
+            throw new ArgumentOutOfRangeException(nameof(nota), "A nota deve estar entre 1 e 5.");
+
         Nota = nota;
-        Comentario = comentario;
+        Comentario = comentario?.Trim();
     }
 }
 
@@ -49,8 +59,8 @@ public sealed class Agendamento
     public int ClienteId { get; }
     public int BarbeiroId { get; }
     public DateTimeOffset DataHora { get; }
-    public DateTimeOffset Fim => DataHora.AddMinutes(Itens.Sum(item => (long)item.DuracaoMinutos));
-    public decimal Total => Itens.Sum(item => item.PrecoCobrado);
+    public DateTimeOffset Fim { get; }
+    public decimal Total { get; }
     public IReadOnlyList<ItemAgendamento> Itens { get; }
     public StatusAgendamento Status { get; private set; } = StatusAgendamento.Pendente;
     public Avaliacao? Avaliacao { get; private set; }
@@ -58,11 +68,19 @@ public sealed class Agendamento
     public Agendamento(int barbeariaId, int clienteId, int barbeiroId,
         DateTimeOffset dataHora, IEnumerable<ItemAgendamento> itens)
     {
+        ArgumentNullException.ThrowIfNull(itens);
+        var listaItens = itens.ToArray();
+
+        if (listaItens.Length == 0)
+            throw new ArgumentException("O agendamento deve conter pelo menos um serviço.", nameof(itens));
+
         BarbeariaId = barbeariaId;
         ClienteId = clienteId;
         BarbeiroId = barbeiroId;
         DataHora = dataHora;
-        Itens = Array.AsReadOnly(itens.ToArray());
+        Itens = Array.AsReadOnly(listaItens);
+        Fim = DataHora.AddMinutes(listaItens.Sum(item => (long)item.DuracaoMinutos));
+        Total = listaItens.Sum(item => item.PrecoCobrado);
     }
 
     private Agendamento Copiar()
@@ -122,11 +140,10 @@ public sealed class Agendamento
 
     public Agendamento Avaliar(Avaliacao avaliacao)
     {
+        ArgumentNullException.ThrowIfNull(avaliacao);
+
         if (Status != StatusAgendamento.Concluido || Avaliacao != null)
             throw new ConflitoAgendamentoException("A avaliação só pode ser registrada uma vez, após a conclusão.");
-
-        if (avaliacao.Nota < 1 || avaliacao.Nota > 5)
-            throw new ArgumentException("A nota deve estar entre 1 e 5.");
 
         var copia = Copiar();
         copia.Avaliacao = avaliacao;
